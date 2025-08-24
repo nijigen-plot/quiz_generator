@@ -34,3 +34,45 @@ Claude Codeで全体的にいい感じに作る。
 1. 指定されたカテゴリのフォルダ下にある.mdファイルをランダムに5回読み取る(1つしかない場合はその1つの文書から5回とも読まれる)
 2. 読み取った結果から都度クイズを出題する。
 3. 互いのクイズが被らないという保証はない。
+
+## 実行方法
+
+### 1. データ抽出（Python）
+
+```bash
+# 環境セットアップ
+uv sync
+
+# 環境変数設定
+cp .env.example .env
+# .envファイルでOPENAI_API_KEYとCOMPANY_NAME(オプション)を設定
+
+# データ抽出実行
+python extract.py
+```
+
+### 2. クイズアプリ（Next.js）
+
+```bash
+cd quiz-frontend
+
+# 依存関係インストール
+bun install
+
+# 環境変数設定
+# .env.localファイルでOPENAI_API_KEYを設定
+
+# 開発サーバー起動
+bun run dev
+```
+
+ブラウザで http://localhost:3000 にアクセスしてクイズアプリを使用できます。
+
+### 3. 本番デプロイ
+
+```bash
+cd quiz-frontend
+bun run build
+bun start
+# またはVercel/Netlifyにデプロイ
+```
