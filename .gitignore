@@ -1,7 +1,68 @@
-# env
-.env
-.envrc
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# knowledge_base
-knowledge_base/*
+# Virtual environments
+.env
+.venv
+env/
+.envrc
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Next.js
+quiz-frontend/.next/
+quiz-frontend/out/
+quiz-frontend/build/
+quiz-frontend/dist/
+
+# Node.js
+quiz-frontend/node_modules/
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+bun.lock
+quiz-frontend/bun.lock
+
+# Environment files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+quiz-frontend/.env.local
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# knowledge files
+knowledge_base/
 !knowledge_base/.gitkeep
