@@ -12,8 +12,13 @@ client = OpenAI(
 )
 
 def get_company_name() -> str:
-    """会社名を入力してもらう"""
-    return input("どの会社について調べますか？: ")
+    """会社名を取得（環境変数から取得、なければ入力してもらう）"""
+    company_name = os.getenv('COMPANY_NAME')
+    if company_name:
+        print(f"環境変数から会社名を取得しました: {company_name}")
+        return company_name
+    else:
+        return input("どの会社について調べますか？: ")
 
 def get_category_folders() -> List[str]:
     """knowledge_base下のフォルダ一覧を取得"""
