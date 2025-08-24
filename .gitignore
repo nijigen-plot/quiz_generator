@@ -1,0 +1,7 @@
+# env
+.env
+.envrc
+
+# knowledge_base
+knowledge_base/*
+!knowledge_base/.gitkeep
