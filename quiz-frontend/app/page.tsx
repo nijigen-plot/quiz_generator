@@ -19,6 +19,7 @@ interface QuizResult {
   selectedAnswer: number;
   correctAnswer: number;
   isCorrect: boolean;
+  options: string[];
 }
 
 export default function QuizApp() {
@@ -94,6 +95,7 @@ export default function QuizApp() {
       selectedAnswer,
       correctAnswer: currentQuestion.correct,
       isCorrect: selectedAnswer === currentQuestion.correct,
+      options: currentQuestion.options,
     };
 
     const newResults = [...results, result];
@@ -122,13 +124,13 @@ export default function QuizApp() {
     return (
       <div className="min-h-screen bg-gray-50 py-12 px-4">
         <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8">
-          <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">
+          <h1 className="text-3xl font-bold text-center mb-8 text-black">
             企業クイズ
           </h1>
           
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-black mb-2">
                 カテゴリを選択
               </label>
               <select
@@ -137,7 +139,7 @@ export default function QuizApp() {
                   setSelectedCategory(e.target.value);
                   setSelectedSubcategory('');
                 }}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
               >
                 <option value="">カテゴリを選んでください</option>
                 {categories.map((category) => (
@@ -150,13 +152,13 @@ export default function QuizApp() {
 
             {selectedCategoryData && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-black mb-2">
                   サブカテゴリを選択
                 </label>
                 <select
                   value={selectedSubcategory}
                   onChange={(e) => setSelectedSubcategory(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                 >
                   <option value="">サブカテゴリを選んでください</option>
                   {selectedCategoryData.subcategories.map((subcategory) => (
@@ -186,10 +188,10 @@ export default function QuizApp() {
       <div className="min-h-screen bg-gray-50 py-12 px-4">
         <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-800">
+            <h1 className="text-2xl font-bold text-black">
               問題 {questionNumber} / 5
             </h1>
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-black">
               {selectedCategory} → {selectedSubcategory}
             </div>
           </div>
@@ -197,11 +199,11 @@ export default function QuizApp() {
           {loading ? (
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-4 text-gray-600">問題を読み込み中...</p>
+              <p className="mt-4 text-black">問題を読み込み中...</p>
             </div>
           ) : currentQuestion ? (
             <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-gray-800 leading-relaxed">
+              <h2 className="text-xl font-semibold text-black leading-relaxed">
                 {currentQuestion.question}
               </h2>
               
@@ -210,7 +212,7 @@ export default function QuizApp() {
                   <button
                     key={index}
                     onClick={() => handleAnswer(index)}
-                    className="w-full text-left p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+                    className="w-full text-left p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors text-black"
                   >
                     <span className="font-medium text-blue-600 mr-3">
                       {String.fromCharCode(65 + index)}.
@@ -232,7 +234,7 @@ export default function QuizApp() {
     return (
       <div className="min-h-screen bg-gray-50 py-12 px-4">
         <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8">
-          <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">
+          <h1 className="text-3xl font-bold text-center mb-8 text-black">
             結果発表
           </h1>
           
@@ -240,7 +242,7 @@ export default function QuizApp() {
             <div className="text-5xl font-bold mb-4">
               {correctCount} / 5
             </div>
-            <div className="text-xl text-gray-600">
+            <div className="text-xl text-black">
               正解率: {Math.round((correctCount / 5) * 100)}%
             </div>
           </div>
@@ -255,12 +257,12 @@ export default function QuizApp() {
                     : 'border-red-200 bg-red-50'
                 }`}
               >
-                <div className="font-medium mb-2">
+                <div className="font-medium mb-2 text-black">
                   問題 {index + 1}: {result.question}
                 </div>
-                <div className="text-sm text-gray-600">
-                  あなたの回答: {String.fromCharCode(65 + result.selectedAnswer)} 
-                  {result.isCorrect ? ' ✅' : ` ❌ (正解: ${String.fromCharCode(65 + result.correctAnswer)})`}
+                <div className="text-sm text-black">
+                  あなたの回答: {String.fromCharCode(65 + result.selectedAnswer)}. {result.options[result.selectedAnswer]}
+                  {result.isCorrect ? ' ✅' : ` ❌ (正解: ${String.fromCharCode(65 + result.correctAnswer)}. ${result.options[result.correctAnswer]})`}
                 </div>
               </div>
             ))}
