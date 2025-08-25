@@ -1,3 +1,4 @@
+import argparse
 import os
 from datetime import datetime
 from pathlib import Path
@@ -112,21 +113,55 @@ def save_result(content: str, company_name: str, category: str, subcategory: str
 
     return file_path
 
-if __name__ == "__main__":
+def main():
+    """メイン処理"""
+    # コマンドライン引数の解析
+    parser = argparse.ArgumentParser(description='企業情報抽出ツール')
+    parser.add_argument('--company', help='会社名を指定')
+    parser.add_argument('--category', help='カテゴリを指定')
+    parser.add_argument('--subcategory', help='サブカテゴリを指定')
+    args = parser.parse_args()
+
     try:
         print("企業情報抽出ツール")
         print("=" * 50)
 
-        # 1. 会社名を取得
-        company_name = get_company_name()
+        # 引数モード vs 対話モード
+        if args.company and args.category and args.subcategory:
+            # 引数モード
+            print("引数モードで実行します")
+            company_name = args.company
+            selected_category = args.category
+            selected_subcategory = args.subcategory
 
-        # 2. カテゴリを選択
-        categories = get_category_folders()
-        selected_category = select_category(categories)
+            # カテゴリの存在確認
+            categories = get_category_folders()
+            if selected_category not in categories:
+                print(f"エラー: カテゴリ '{selected_category}' が見つかりません")
+                print(f"利用可能なカテゴリ: {', '.join(categories)}")
+                return
 
-        # 3. サブカテゴリを選択
-        subcategories = get_subcategory_folders(selected_category)
-        selected_subcategory = select_subcategory(selected_category, subcategories)
+            subcategories = get_subcategory_folders(selected_category)
+            if selected_subcategory not in subcategories:
+                print(f"エラー: サブカテゴリ '{selected_subcategory}' が見つかりません")
+                print(f"'{selected_category}' の利用可能なサブカテゴリ: {', '.join(subcategories)}")
+                return
+
+            print(f"引数モード: {company_name} -> {selected_category}/{selected_subcategory}")
+        else:
+            # 対話モード
+            print("対話モードで実行します。引数モードで実行するには --company, --category, --subcategory 全てを一括で指定してください。")
+
+            # 1. 会社名を取得
+            company_name = get_company_name()
+
+            # 2. カテゴリを選択
+            categories = get_category_folders()
+            selected_category = select_category(categories)
+
+            # 3. サブカテゴリを選択
+            subcategories = get_subcategory_folders(selected_category)
+            selected_subcategory = select_subcategory(selected_category, subcategories)
 
         print(f"\n調査開始: {company_name}の{selected_category}/{selected_subcategory}")
         print("OpenAI APIで情報を検索中...")
@@ -144,3 +179,6 @@ if __name__ == "__main__":
         print("\n\n処理が中断されました")
     except Exception as e:
         print(f"\nエラーが発生しました: {e}")
+
+if __name__ == "__main__":
+    main()
