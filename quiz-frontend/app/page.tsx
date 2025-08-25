@@ -2,6 +2,11 @@
 
 import { useState, useEffect } from 'react';
 
+interface Company {
+  name: string;
+  categories: Category[];
+}
+
 interface Category {
   name: string;
   subcategories: string[];
@@ -12,6 +17,7 @@ interface QuizQuestion {
   question: string;
   options: string[];
   correct: number;
+  sourceUrl?: string;
 }
 
 interface QuizResult {
@@ -20,46 +26,42 @@ interface QuizResult {
   correctAnswer: number;
   isCorrect: boolean;
   options: string[];
+  sourceUrl?: string;
 }
 
 export default function QuizApp() {
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [selectedCompany, setSelectedCompany] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('');
+  const [allQuestions, setAllQuestions] = useState<QuizQuestion[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState<QuizQuestion | null>(null);
   const [questionNumber, setQuestionNumber] = useState<number>(0);
   const [results, setResults] = useState<QuizResult[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [gameState, setGameState] = useState<'setup' | 'playing' | 'finished'>('setup');
 
-  // Load categories on component mount
+  // Load companies on component mount
   useEffect(() => {
-    fetchCategories();
+    fetchCompanies();
   }, []);
 
-  const fetchCategories = async () => {
+  const fetchCompanies = async () => {
     try {
       const response = await fetch('/api/categories');
       const data = await response.json();
-      setCategories(data);
+      setCompanies(data);
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.error('Error fetching companies:', error);
     }
   };
 
   const startQuiz = async () => {
-    if (!selectedCategory || !selectedSubcategory) {
-      alert('カテゴリとサブカテゴリを選択してください');
+    if (!selectedCompany || !selectedCategory || !selectedSubcategory) {
+      alert('会社、カテゴリ、サブカテゴリをすべて選択してください');
       return;
     }
     
-    setGameState('playing');
-    setQuestionNumber(1);
-    setResults([]);
-    await fetchNextQuestion();
-  };
-
-  const fetchNextQuestion = async () => {
     setLoading(true);
     try {
       const response = await fetch('/api/quiz', {
@@ -68,26 +70,31 @@ export default function QuizApp() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          company: selectedCompany,
           category: selectedCategory,
           subcategory: selectedSubcategory,
         }),
       });
       
       if (!response.ok) {
-        throw new Error('Failed to fetch quiz question');
+        throw new Error('Failed to fetch quiz questions');
       }
       
-      const question = await response.json();
-      setCurrentQuestion(question);
+      const quizSet = await response.json();
+      setAllQuestions(quizSet.questions);
+      setCurrentQuestion(quizSet.questions[0]);
+      setGameState('playing');
+      setQuestionNumber(1);
+      setResults([]);
     } catch (error) {
-      console.error('Error fetching question:', error);
-      alert('質問の取得に失敗しました');
+      console.error('Error fetching questions:', error);
+      alert('クイズの取得に失敗しました');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAnswer = async (selectedAnswer: number) => {
+  const handleAnswer = (selectedAnswer: number) => {
     if (!currentQuestion) return;
 
     const result: QuizResult = {
@@ -96,6 +103,7 @@ export default function QuizApp() {
       correctAnswer: currentQuestion.correct,
       isCorrect: selectedAnswer === currentQuestion.correct,
       options: currentQuestion.options,
+      sourceUrl: currentQuestion.sourceUrl,
     };
 
     const newResults = [...results, result];
@@ -105,20 +113,23 @@ export default function QuizApp() {
       setGameState('finished');
     } else {
       setQuestionNumber(prev => prev + 1);
-      await fetchNextQuestion();
+      setCurrentQuestion(allQuestions[questionNumber]); // 次の問題を設定
     }
   };
 
   const resetQuiz = () => {
     setGameState('setup');
     setCurrentQuestion(null);
+    setAllQuestions([]);
     setQuestionNumber(0);
     setResults([]);
+    setSelectedCompany('');
     setSelectedCategory('');
     setSelectedSubcategory('');
   };
 
-  const selectedCategoryData = categories.find(cat => cat.name === selectedCategory);
+  const selectedCompanyData = companies.find(comp => comp.name === selectedCompany);
+  const selectedCategoryData = selectedCompanyData?.categories.find(cat => cat.name === selectedCategory);
 
   if (gameState === 'setup') {
     return (
@@ -129,28 +140,56 @@ export default function QuizApp() {
           </h1>
           
           <div className="space-y-6">
+            {/* 会社選択 */}
             <div>
               <label className="block text-sm font-medium text-black mb-2">
-                カテゴリを選択
+                会社を選択
               </label>
               <select
-                value={selectedCategory}
+                value={selectedCompany}
                 onChange={(e) => {
-                  setSelectedCategory(e.target.value);
+                  setSelectedCompany(e.target.value);
+                  setSelectedCategory('');
                   setSelectedSubcategory('');
                 }}
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
               >
-                <option value="">カテゴリを選んでください</option>
-                {categories.map((category) => (
-                  <option key={category.name} value={category.name}>
-                    {category.name}
+                <option value="">会社を選んでください</option>
+                {companies.map((company) => (
+                  <option key={company.name} value={company.name}>
+                    {company.name}
                   </option>
                 ))}
               </select>
             </div>
 
-            {selectedCategoryData && (
+            {/* カテゴリ選択 */}
+            {selectedCompanyData && (
+              <div>
+                <label className="block text-sm font-medium text-black mb-2">
+                  カテゴリを選択
+                </label>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => {
+                    setSelectedCategory(e.target.value);
+                    setSelectedSubcategory('');
+                  }}
+                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                >
+                  <option value="">カテゴリを選んでください</option>
+                  <option value="すべて">すべて</option>
+                  {selectedCompanyData.categories.map((category) => (
+                    <option key={category.name} value={category.name}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* サブカテゴリ選択 */}
+            {selectedCategory && (
               <div>
                 <label className="block text-sm font-medium text-black mb-2">
                   サブカテゴリを選択
@@ -161,7 +200,8 @@ export default function QuizApp() {
                   className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                 >
                   <option value="">サブカテゴリを選んでください</option>
-                  {selectedCategoryData.subcategories.map((subcategory) => (
+                  <option value="すべて">すべて</option>
+                  {selectedCategory !== 'すべて' && selectedCategoryData?.subcategories.map((subcategory) => (
                     <option key={subcategory} value={subcategory}>
                       {subcategory}
                     </option>
@@ -172,10 +212,10 @@ export default function QuizApp() {
 
             <button
               onClick={startQuiz}
-              disabled={!selectedCategory || !selectedSubcategory}
+              disabled={!selectedCompany || !selectedCategory || !selectedSubcategory || loading}
               className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
-              クイズ開始
+              {loading ? 'クイズ準備中...' : 'クイズ開始'}
             </button>
           </div>
         </div>
@@ -192,7 +232,7 @@ export default function QuizApp() {
               問題 {questionNumber} / 5
             </h1>
             <div className="text-sm text-black">
-              {selectedCategory} → {selectedSubcategory}
+              {selectedCompany} → {selectedCategory} → {selectedSubcategory}
             </div>
           </div>
 
@@ -264,6 +304,13 @@ export default function QuizApp() {
                   あなたの回答: {String.fromCharCode(65 + result.selectedAnswer)}. {result.options[result.selectedAnswer]}
                   {result.isCorrect ? ' ✅' : ` ❌ (正解: ${String.fromCharCode(65 + result.correctAnswer)}. ${result.options[result.correctAnswer]})`}
                 </div>
+                {result.sourceUrl && (
+                  <div className="text-xs text-blue-600 mt-1">
+                    参考: <a href={result.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-800">
+                      {result.sourceUrl}
+                    </a>
+                  </div>
+                )}
               </div>
             ))}
           </div>
