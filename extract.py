@@ -25,14 +25,14 @@ def create_company_structure(company_name: str) -> None:
     """会社フォルダと標準カテゴリ構造を作成"""
     knowledge_base_path = Path("knowledge_base")
     company_path = knowledge_base_path / company_name
-    
+
     # 会社フォルダが既に存在する場合はスキップ
     if company_path.exists():
         print(f"会社フォルダ '{company_name}' は既に存在します")
         return
-    
+
     print(f"新しい会社フォルダ '{company_name}' を作成しています...")
-    
+
     # 標準的なカテゴリ構造を定義
     category_structure = {
         "business": ["competition", "kpis", "market", "partnerships", "pricing", "revenue"],
@@ -41,16 +41,16 @@ def create_company_structure(company_name: str) -> None:
         "people": ["employees", "executives", "founders", "governance", "org-structure"],
         "products": ["saas", "enterprise", "consumer", "api", "platform", "mobile", "desktop", "web"]
     }
-    
+
     # カテゴリとサブカテゴリフォルダを作成
     for category, subcategories in category_structure.items():
         category_path = company_path / category
         category_path.mkdir(parents=True, exist_ok=True)
-        
+
         for subcategory in subcategories:
             subcategory_path = category_path / subcategory
             subcategory_path.mkdir(parents=True, exist_ok=True)
-    
+
     print(f"会社フォルダ '{company_name}' とカテゴリ構造を作成しました")
 
 def get_category_folders(company_name: str) -> List[str]:
@@ -58,7 +58,7 @@ def get_category_folders(company_name: str) -> List[str]:
     company_path = Path("knowledge_base") / company_name
     if not company_path.exists():
         raise FileNotFoundError(f"会社フォルダ '{company_name}' が見つかりません")
-    
+
     folders = [f.name for f in company_path.iterdir() if f.is_dir()]
     return sorted(folders)
 
@@ -112,7 +112,16 @@ def search_with_openai(company_name: str, category: str, subcategory: str) -> st
     try:
         response = client.responses.create(
             model="gpt-5",
-            tools=[{"type": "web_search_preview", "search_context_size": "medium"}],
+            tools=[
+                    {
+                        "type": "web_search_preview",
+                        "search_context_size": "medium",
+                        "user_location": {
+                            "type": "approximate",
+                            "country": "JP"
+                        }
+                    }
+                ],
             input=search_query
         )
         return response.output_text
