@@ -279,7 +279,7 @@ export default function QuizApp() {
           </h1>
           
           <div className="text-center mb-8">
-            <div className="text-5xl font-bold mb-4">
+            <div className="text-5xl font-bold mb-4 text-black">
               {correctCount} / 5
             </div>
             <div className="text-xl text-black">
