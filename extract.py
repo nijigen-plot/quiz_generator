@@ -21,13 +21,45 @@ def get_company_name() -> str:
     else:
         return input("どの会社について調べますか？: ")
 
-def get_category_folders() -> List[str]:
-    """knowledge_base下のフォルダ一覧を取得"""
+def create_company_structure(company_name: str) -> None:
+    """会社フォルダと標準カテゴリ構造を作成"""
     knowledge_base_path = Path("knowledge_base")
-    if not knowledge_base_path.exists():
-        raise FileNotFoundError("knowledge_base フォルダが見つかりません")
+    company_path = knowledge_base_path / company_name
+    
+    # 会社フォルダが既に存在する場合はスキップ
+    if company_path.exists():
+        print(f"会社フォルダ '{company_name}' は既に存在します")
+        return
+    
+    print(f"新しい会社フォルダ '{company_name}' を作成しています...")
+    
+    # 標準的なカテゴリ構造を定義
+    category_structure = {
+        "business": ["competition", "kpis", "market", "partnerships", "pricing", "revenue"],
+        "culture": ["diversity-inclusion", "events", "mission-vision-values", "workstyle"],
+        "history": ["founding", "ipo", "m_and_a", "milestones", "rebranding"],
+        "people": ["employees", "executives", "founders", "governance", "org-structure"],
+        "products": ["saas", "enterprise", "consumer", "api", "platform", "mobile", "desktop", "web"]
+    }
+    
+    # カテゴリとサブカテゴリフォルダを作成
+    for category, subcategories in category_structure.items():
+        category_path = company_path / category
+        category_path.mkdir(parents=True, exist_ok=True)
+        
+        for subcategory in subcategories:
+            subcategory_path = category_path / subcategory
+            subcategory_path.mkdir(parents=True, exist_ok=True)
+    
+    print(f"会社フォルダ '{company_name}' とカテゴリ構造を作成しました")
 
-    folders = [f.name for f in knowledge_base_path.iterdir() if f.is_dir()]
+def get_category_folders(company_name: str) -> List[str]:
+    """指定会社のカテゴリフォルダ一覧を取得"""
+    company_path = Path("knowledge_base") / company_name
+    if not company_path.exists():
+        raise FileNotFoundError(f"会社フォルダ '{company_name}' が見つかりません")
+    
+    folders = [f.name for f in company_path.iterdir() if f.is_dir()]
     return sorted(folders)
 
 def select_category(folders: List[str]) -> str:
@@ -45,9 +77,9 @@ def select_category(folders: List[str]) -> str:
         except ValueError:
             print("カテゴリ名に該当する数値を入力してください")
 
-def get_subcategory_folders(category: str) -> List[str]:
+def get_subcategory_folders(company_name: str, category: str) -> List[str]:
     """選択されたカテゴリ内のサブフォルダ一覧を取得"""
-    category_path = Path("knowledge_base") / category
+    category_path = Path("knowledge_base") / company_name / category
     subfolders = [f.name for f in category_path.iterdir() if f.is_dir()]
     return sorted(subfolders)
 
@@ -89,8 +121,8 @@ def search_with_openai(company_name: str, category: str, subcategory: str) -> st
 
 def save_result(content: str, company_name: str, category: str, subcategory: str) -> Path:
     """結果を指定されたパスに.mdファイルとして保存"""
-    # 保存パスを作成
-    save_path = Path("knowledge_base") / category / subcategory
+    # 保存パスを作成（会社フォルダ配下）
+    save_path = Path("knowledge_base") / company_name / category / subcategory
     save_path.mkdir(parents=True, exist_ok=True)
 
     # タイムスタンプファイル名を生成
@@ -134,14 +166,17 @@ def main():
             selected_category = args.category
             selected_subcategory = args.subcategory
 
+            # 会社フォルダ構造を作成（存在しない場合）
+            create_company_structure(company_name)
+
             # カテゴリの存在確認
-            categories = get_category_folders()
+            categories = get_category_folders(company_name)
             if selected_category not in categories:
                 print(f"エラー: カテゴリ '{selected_category}' が見つかりません")
                 print(f"利用可能なカテゴリ: {', '.join(categories)}")
                 return
 
-            subcategories = get_subcategory_folders(selected_category)
+            subcategories = get_subcategory_folders(company_name, selected_category)
             if selected_subcategory not in subcategories:
                 print(f"エラー: サブカテゴリ '{selected_subcategory}' が見つかりません")
                 print(f"'{selected_category}' の利用可能なサブカテゴリ: {', '.join(subcategories)}")
@@ -155,12 +190,15 @@ def main():
             # 1. 会社名を取得
             company_name = get_company_name()
 
+            # 会社フォルダ構造を作成（存在しない場合）
+            create_company_structure(company_name)
+
             # 2. カテゴリを選択
-            categories = get_category_folders()
+            categories = get_category_folders(company_name)
             selected_category = select_category(categories)
 
             # 3. サブカテゴリを選択
-            subcategories = get_subcategory_folders(selected_category)
+            subcategories = get_subcategory_folders(company_name, selected_category)
             selected_subcategory = select_subcategory(selected_category, subcategories)
 
         print(f"\n調査開始: {company_name}の{selected_category}/{selected_subcategory}")
