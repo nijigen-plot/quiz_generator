@@ -20,10 +20,6 @@ interface QuizQuestion {
   sourceUrl?: string;
 }
 
-interface QuizSet {
-  questions: QuizQuestion[];
-  sourceFile: string;
-}
 
 // すべてのmdファイルを再帰的に取得
 async function getAllMdFiles(basePath: string): Promise<string[]> {
@@ -94,48 +90,44 @@ export async function POST(request: NextRequest) {
     const randomFilePath = filePaths[Math.floor(Math.random() * filePaths.length)];
     const content = await readFile(randomFilePath, 'utf-8');
 
-    // Generate 5 quiz questions using OpenAI
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: `あなたはクイズ生成の専門家です。与えられた文書から4択クイズを5問作成してください。
+    // Generate 5 quiz questions using OpenAI GPT-5 Responses API
+    const prompt = `あなたはクイズ生成の専門家です。与えられた文書から4択クイズを5問作成してください。
 
-          以下のJSON形式で返答してください：
-          {
-            "questions": [
-              {
-                "question": "質問文1",
-                "options": ["選択肢1", "選択肢2", "選択肢3", "選択肢4"],
-                "correct": 0,
-                "sourceUrl": "参考にした情報源のURL（文書内に記載されている場合のみ）"
-              },
-              {
-                "question": "質問文2",
-                "options": ["選択肢1", "選択肢2", "選択肢3", "選択肢4"],
-                "correct": 1,
-                "sourceUrl": "参考にした情報源のURL（文書内に記載されている場合のみ）"
-              }
-              // ... 5問分
-            ]
-          }
+以下のJSON形式で返答してください：
+{
+  "questions": [
+    {
+      "question": "質問文1",
+      "options": ["選択肢1", "選択肢2", "選択肢3", "選択肢4"],
+      "correct": 0,
+      "sourceUrl": "参考にした情報源のURL（文書内に記載されている場合のみ）"
+    },
+    {
+      "question": "質問文2",
+      "options": ["選択肢1", "選択肢2", "選択肢3", "選択肢4"],
+      "correct": 1,
+      "sourceUrl": "参考にした情報源のURL（文書内に記載されている場合のみ）"
+    }
+    // ... 5問分
+  ]
+}
 
-          - correctは正解の選択肢のインデックス（0-3）です
-          - 文書の異なる部分から5問作成してください
-          - 難易度は適度にしてください
-          - sourceUrlは文書内にURLが記載されている場合のみ含めてください
-          - URLが見つからない場合は空文字列""にしてください`
-        },
-        {
-          role: 'user',
-          content: `以下の文書から5問のクイズを作成してください：\n\n${content}`
-        }
-      ],
-      temperature: 0.7,
+- correctは正解の選択肢のインデックス（0-3）です
+- 文書の異なる部分から5問作成してください
+- 難易度は適度にしてください
+- sourceUrlは文書内にURLが記載されている場合のみ含めてください
+- URLが見つからない場合は空文字列""にしてください
+
+以下の文書から5問のクイズを作成してください：
+
+${content}`;
+
+    const response = await client.responses.create({
+      model: "gpt-5",
+      input: prompt,
     });
 
-    const quizData = response.choices[0].message.content;
+    const quizData = response.output_text;
     if (!quizData) {
       throw new Error('No response from OpenAI');
     }
