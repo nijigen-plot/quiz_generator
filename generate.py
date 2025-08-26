@@ -23,10 +23,19 @@ def get_existing_companies() -> List[str]:
     return sorted(companies)
 
 def select_company() -> str:
-    """対話的に会社を選択"""
+    """会社を選択（環境変数から取得、なければ対話的に選択）"""
+    # 環境変数から会社名を取得を試行
+    env_company = os.getenv('COMPANY_NAME')
     companies = get_existing_companies()
+    
     if not companies:
         raise ValueError("knowledge_base下に会社フォルダが見つかりません。先にextract.pyを実行してください。")
+    
+    if env_company and env_company in companies:
+        print(f"環境変数から会社名を取得しました: {env_company}")
+        return env_company
+    elif env_company:
+        print(f"警告: 環境変数の会社名 '{env_company}' が見つかりません。対話的に選択してください。")
     
     print("\n利用可能な会社一覧:")
     for i, company in enumerate(companies, 1):
