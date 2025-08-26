@@ -64,3 +64,5 @@ Thumbs.db
 # knowledge files
 knowledge_base/
 !knowledge_base/.gitkeep
+quizzes/
+!quizzes/.gitkeep
