@@ -15,14 +15,14 @@ interface Category {
 
 export async function GET() {
   try {
-    const knowledgeBasePath = join(process.cwd(), '..', 'knowledge_base');
+    const quizzesPath = join(process.cwd(), '..', 'quizzes');
     
-    // Get all company directories
-    const companyDirs = await readdir(knowledgeBasePath);
+    // Get all company directories from quizzes folder
+    const companyDirs = await readdir(quizzesPath);
     const companies: Company[] = [];
 
     for (const companyDir of companyDirs) {
-      const companyPath = join(knowledgeBasePath, companyDir);
+      const companyPath = join(quizzesPath, companyDir);
       const companyStats = await stat(companyPath);
       
       if (companyStats.isDirectory()) {
@@ -45,11 +45,11 @@ export async function GET() {
               const subcategoryStats = await stat(subcategoryPath);
               
               if (subcategoryStats.isDirectory()) {
-                // Check if this subcategory has .md files
+                // Check if this subcategory has .json files
                 const files = await readdir(subcategoryPath);
-                const mdFiles = files.filter(file => file.endsWith('.md'));
+                const jsonFiles = files.filter(file => file.endsWith('.json'));
                 
-                if (mdFiles.length > 0) {
+                if (jsonFiles.length > 0) {
                   subcategories.push(subcategoryDir);
                   hasFiles = true;
                 }
@@ -77,9 +77,9 @@ export async function GET() {
 
     return NextResponse.json(companies);
   } catch (error) {
-    console.error('Error reading knowledge base:', error);
+    console.error('Error reading quizzes:', error);
     return NextResponse.json(
-      { error: 'Failed to read knowledge base' },
+      { error: 'Failed to read quizzes' },
       { status: 500 }
     );
   }
