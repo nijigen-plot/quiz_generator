@@ -1,14 +1,12 @@
 # 企業クイズ生成システム
 
-Vibe Codingによる指定した企業についてのクイズを生成します。
+指定した企業についての情報を収集し、そこからクイズを出題します。
+
+AIがWeb Search & クイズを作っています。コーディングも所謂Vibe Codingで作りました。
 
 ## 全体像
 
-![システム構成図](architecture.png)
-
-
-
-
+![イメージ](image.png)
 
 
 ## 主な機能
@@ -17,6 +15,9 @@ Vibe Codingによる指定した企業についてのクイズを生成します
 - **Webサーチ**: OpenAI GPT-5 + Web検索で最新企業情報を自動収集
 - **自動整理**: 会社別・カテゴリ別の構造化されたナレッジベース構築
 - **対話/引数モード**: 柔軟な実行方式（対話的選択 or コマンドライン引数）
+
+### 🤔 クイズ生成システム(generate.py)
+- **クイズ生成** OpenAI GPT-5によるデータ抽出結果からクイズを生成
 
 ### 🎯 クイズアプリケーション（Next.js + React）
 - **3段階選択**: 会社 → 大カテゴリ → 中カテゴリ
@@ -27,10 +28,10 @@ Vibe Codingによる指定した企業についてのクイズを生成します
 
 ## データ構造
 
-抽出したデータは以下のように配置されます。
+抽出したデータと生成したクイズは以下のように配置されます。
 
 ```
-knowledge_base/
+knowledge_base or quizzes/
 └── {会社名}/
     ├── business/      # ビジネス情報
     │   ├── competition/    # 競合分析
@@ -44,6 +45,7 @@ knowledge_base/
         ├── enterprise/
         └── consumer/
 ```
+
 
 ### 柔軟なカテゴリ構成
 - **標準カテゴリ**: 新会社作成時に汎用的な構造を自動生成
@@ -118,6 +120,20 @@ python extract.py
 python extract.py --company "会社名" --category "business" --subcategory "market"
 ```
 
+### 🧠クイズ生成
+
+**対話モード**（推奨）
+```bash
+python generate.py
+# 会社名、カテゴリ、サブカテゴリ、対象文書を順次選択
+```
+
+**引数モード**（自動化用）
+```bash
+# 特定の情報を直接指定
+python generate.py --company "会社名" --category "business" --subcategory "market" --file "YYYYMMDD_hhmmss.json"
+```
+
 ### 🎮 クイズアプリ
 
 #### フロントエンド環境セットアップ
@@ -131,7 +147,11 @@ bun install
 #### アプリ起動
 ```bash
 # 開発サーバー起動
-bun run dev
+bun run dev -p 3000
+
+# 本番の場合は以下
+bun run build
+bun start -p 3000
 ```
 
 http://localhost:3000 でクイズアプリにアクセス
