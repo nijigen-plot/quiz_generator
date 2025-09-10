@@ -20,6 +20,14 @@ interface QuizQuestion {
   sourceUrl?: string;
 }
 
+interface ShuffledQuestion {
+  question: string;
+  options: string[];
+  correct: number;
+  sourceUrl?: string;
+  originalCorrect: number;
+}
+
 interface QuizResult {
   question: string;
   selectedAnswer: number;
@@ -35,7 +43,7 @@ export default function QuizApp() {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('');
   const [allQuestions, setAllQuestions] = useState<QuizQuestion[]>([]);
-  const [currentQuestion, setCurrentQuestion] = useState<QuizQuestion | null>(null);
+  const [currentQuestion, setCurrentQuestion] = useState<ShuffledQuestion | null>(null);
   const [questionNumber, setQuestionNumber] = useState<number>(0);
   const [results, setResults] = useState<QuizResult[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -54,6 +62,33 @@ export default function QuizApp() {
     } catch (error) {
       console.error('Error fetching companies:', error);
     }
+  };
+
+  // Fisher-Yates shuffle algorithm
+  const shuffleArray = <T>(array: T[]): T[] => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  };
+
+  // シャッフルされた問題を作成する関数
+  const createShuffledQuestion = (question: QuizQuestion): ShuffledQuestion => {
+    const optionsWithIndex = question.options.map((option, index) => ({ option, index }));
+    const shuffledOptionsWithIndex = shuffleArray(optionsWithIndex);
+    
+    const shuffledOptions = shuffledOptionsWithIndex.map(item => item.option);
+    const newCorrectIndex = shuffledOptionsWithIndex.findIndex(item => item.index === question.correct);
+    
+    return {
+      question: question.question,
+      options: shuffledOptions,
+      correct: newCorrectIndex,
+      sourceUrl: question.sourceUrl,
+      originalCorrect: question.correct
+    };
   };
 
   const startQuiz = async () => {
@@ -82,7 +117,7 @@ export default function QuizApp() {
       
       const quizSet = await response.json();
       setAllQuestions(quizSet.questions);
-      setCurrentQuestion(quizSet.questions[0]);
+      setCurrentQuestion(createShuffledQuestion(quizSet.questions[0]));
       setGameState('playing');
       setQuestionNumber(1);
       setResults([]);
@@ -113,7 +148,7 @@ export default function QuizApp() {
       setGameState('finished');
     } else {
       setQuestionNumber(prev => prev + 1);
-      setCurrentQuestion(allQuestions[questionNumber]); // 次の問題を設定
+      setCurrentQuestion(createShuffledQuestion(allQuestions[questionNumber])); // 次の問題をシャッフルして設定
     }
   };
 
