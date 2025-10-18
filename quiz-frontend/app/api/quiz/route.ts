@@ -8,14 +8,6 @@ interface QuizRequest {
   subcategory: string;
 }
 
-interface QuizQuestion {
-  question: string;
-  options: string[];
-  correct: number;
-  sourceUrl?: string;
-}
-
-
 // すべてのJSONファイルを再帰的に取得
 async function getAllJsonFiles(basePath: string): Promise<string[]> {
   const allFiles: string[] = [];
